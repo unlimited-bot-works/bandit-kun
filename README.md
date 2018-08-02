@@ -6,5 +6,21 @@ Monitors all reddit submissions and scrapes data from valid video submissions
 
 Bandit-kun collects the following information from submissions
 
-| **timestamp** | **author** | **subreddit** | **title** | **domain** | **url** | **width** | **height** | **duration** | **upvotes** | **ratio** | **score** | **guilded** | **permalink** | **id** | **original** |
-| :-----------: | :--------: | :-----------: | :-------: | :--------: | :-----: | :-------: | :--------: | :----------: | :---------: | :-------: | :-------: | :---------: | :-----------: | :----: | :----------: |
+| **Headers** |
+| :---------: |
+|  timestamp  |
+|     u/      |
+|     r/      |
+|    title    |
+|   domain    |
+|     url     |
+|    width    |
+|   height    |
+|  duration   |
+|   upvotes   |
+|    ratio    |
+|    score    |
+|   guilded   |
+|  permalink  |
+|    uuid     |
+|     OC      |
