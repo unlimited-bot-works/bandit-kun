@@ -2,6 +2,7 @@ import os
 import praw
 import time
 import pandas
+import pymongo
 import prawcore
 import datetime
 import colorful
@@ -198,9 +199,11 @@ def main():
     banditkun = Bot(r)
 
     # Threads to watch multiple streams
+    # TODO: comment stream thread
     submission_thread = threading.Thread(target=banditkun.init_new_stream)
     mention_thread = threading.Thread(target=banditkun.init_mention_stream)
 
+    # TODO: argparse and selectively run threads
     # Start bandit-kun
     submission_thread.start()
     mention_thread.start()

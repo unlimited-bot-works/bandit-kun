@@ -8,6 +8,7 @@ praw = "*"
 pandas = "*"
 prawcore = "*"
 colorful = "*"
+pymongo = "*"
 
 [dev-packages]
 
