@@ -1,12 +1,9 @@
-import os
-import praw
 import time
-import pandas
-import pymongo
+import praw
 import prawcore
-import datetime
-import colorful
 import threading
+
+from pymongo import MongoClient
 
 
 class Bot:
@@ -22,105 +19,45 @@ class Bot:
     Scraped video urls are saved in ./data/video_list_{MM}_{DD}.csv
 
     usage:
-    python3 banditkun.py --stream --mentions --submissions
+    python3 banditkun.py --mentions --submissions
     """
 
-    def __init__(self, r):
+    def __init__(self, r, db_uri):
         # PRAW reddit instance
         self.reddit = r
 
-        # Date and Time
-        now = datetime.datetime.now()
-
-        # Data file
-        self.csv_file = f"./data/video_list_{now.month}_{now.day}.csv"
-        self.columns = [
-            'timestamp',
-            'author',
-            'subreddit',
-            'title',
-            'domain',
-            'url',
-            'width',
-            'height',
-            'duration',
-            'upvotes',
-            'ratio',
-            'score',
-            'guilded',
-            'permalink',
-            'id',
-            'original'
-        ]
+        # Database
+        client = MongoClient()
+        self.db = client.banditkun
 
     def save_video_meta(self, submission, url, width, height, duration=0):
         # TODO: Skip duplicates
 
-        # Get epoch timestamp
-        epoch = int(time.time())
+        post = {
+            'timestamp': int(time.time()),
+            'created': float(submission.created_utc),
+            'author': str(submission.author),
+            'subreddit': str(submission.subreddit.display_name),
+            'title': str(submission.title),
+            'domain': str(submission.domain),
+            'url': str(url),
+            'width': int(width),
+            'height': int(height),
+            'duration': int(duration),
+            'upvotes': int(submission.ups),
+            'ratio': float(submission.upvote_ratio),
+            'score': float(submission.score),
+            'guilded': int(submission.gilded),
+            'permalink': str(submission.permalink),
+            'id': str(submission.id),
+            'oc': submission.is_original_content,
+            'categories': submission.content_categories
+        }
 
-        domain = submission.domain
-        author = submission.author
-        subreddit = submission.subreddit.display_name
+        posts = self.db.posts
+        post_id = posts.insert_one(post).inserted_id
 
-        # Sanitize titles
-        title = submission.title.replace(",", "")
-
-        # Rating
-        upvotes = submission.ups
-        ratio = submission.upvote_ratio
-        score = submission.score
-        guilded = submission.gilded
-
-        # Referencec
-        permalink = submission.permalink
-        uuid = submission.id
-        original = submission.is_original_content
-
-        df = pandas.DataFrame(
-            [
-                [
-                    epoch,
-                    author,
-                    subreddit,
-                    title,
-                    domain,
-                    url,
-                    width,
-                    height,
-                    duration,
-                    upvotes,
-                    ratio,
-                    score,
-                    guilded,
-                    permalink,
-                    uuid,
-                    original
-                ]
-            ],
-            columns=self.columns,
-        )
-
-        if int(guilded) > 0:
-            print(colorful.magenta(f"{upvotes}\u25b2 [{ratio}]"))
-        else:
-            print(colorful.cyan(f"{upvotes}\u25b2 [{ratio}]"))
-
-        print(f"u/{author} in r/{subreddit}")
-
-        print(colorful.orange(f"[{domain}] {title}"))
-        print(f"{width} x {height} @ {duration}\n")
-
-        if not os.path.isfile(self.csv_file):
-            df.to_csv(self.csv_file, header=self.columns, index=False)
-        else:
-            df.to_csv(
-                self.csv_file,
-                mode='a',
-                header=False,
-                columns=self.columns,
-                index=False
-            )
+        print(f"Added {post_id} to database")
 
     def parse_submission(self, submission, root):
         """Parse reddit submissions
@@ -172,10 +109,19 @@ class Bot:
 
     def init_mention_stream(self):
         """Watch for /u/ mentions"""
-        for mention in self.reddit.inbox.stream():
-            print(colorful.red(f"{mention.author}\n{mention.body}"))
-            mention.mark_read(mention)
-            self.parse_submission(mention.submission, mention)
+        try:
+            for mention in self.reddit.inbox.stream():
+                mention.mark_read(mention)
+                self.parse_submission(mention.submission, mention)
+
+        except prawcore.exceptions.ServerError:
+            print("Issue on post stream...")
+
+        except prawcore.exceptions.RequestException:
+            print("Reddit might be down...")
+
+        except prawcore.exceptions.Forbidden:
+            print("Forbidden!")
 
     def init_new_stream(self):
         """Watch new submissions"""
@@ -196,7 +142,9 @@ class Bot:
 def main():
     r = reddit = praw.Reddit("banditkun")
     print("logged in as /u/{}".format(reddit.user.me()))  # test login username
-    banditkun = Bot(r)
+
+    # Init bot config
+    banditkun = Bot(r, 'mongodb://localhost:27017/')
 
     # Threads to watch multiple streams
     # TODO: comment stream thread
