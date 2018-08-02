@@ -1,6 +1,6 @@
 # Bandit-kun
 
-Monitors all reddit submissions and scrapes data from valid video submissions
+A bot that watches reddit stream for videos and scrapes it.
 
 ## Installation
 
@@ -34,26 +34,27 @@ python scraper/bot.py --submissions --mentions
 
 ## Dataset
 
-Bandit-kun collects the following information from submissions
+Bandit-kun collects the following information from reddit submissions
 
-| **Header** | **Datatype** |
-| :--------: | :----------: |
-|   epoch    |   datetime   |
-|   author   |     str      |
-| subreddit  |     str      |
-|   title    |     str      |
-|   domain   |     str      |
-|    url     |     url      |
-|   width    |     int      |
-|   height   |     int      |
-|  duration  |     int      |
-|  upvotes   |     int      |
-|   ratio    |    float     |
-|   score    |     int      |
-|  guilded   |     int      |
-| permalink  |    string    |
-|    uuid    |     str      |
-| categories |     list     |
+| **Header** | **Datatype** |              **Datatype**               |
+| :--------: | :----------: | :-------------------------------------: |
+| timestamp  |   datetime   |        time when bot took action        |
+|  created   |   datetime   |       submission created time utc       |
+|   author   |     str      |    redditor who made the submission     |
+| subreddit  |     str      | subreddit where the submission was made |
+|   title    |     str      |            submission title             |
+|   domain   |     str      |            video host domain            |
+|    url     |     url      |                video url                |
+|   width    |     int      |           width of the video            |
+|   height   |     int      |           height of the video           |
+|  duration  |     int      |  duration of the video (0 for youtube)  |
+|  upvotes   |     int      |           submission upvotes            |
+|   ratio    |    float     |          upvote/downvote ratio          |
+|   score    |     int      |       wilson score of submission        |
+|  guilded   |     int      |       guilded count of submission       |
+| permalink  |    string    |        permanent link to reddit         |
+|    uuid    |     str      |              submission id              |
+| categories |     list     |          submission categories          |
 
 ## License
 
